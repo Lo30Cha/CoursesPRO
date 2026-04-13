@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Liste de Courses</title>
+    <!-- Nous utilisons Tailwind CSS pour styliser l'application facilement avec des classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 font-sans text-gray-800">
+
+    <!-- Conteneur principal de l'application -->
+    <div class="max-w-md mx-auto mt-10 bg-white p-6 rounded-xl shadow-lg relative">
+        
+        <!-- Titre avec bouton vider -->
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-3xl font-bold text-blue-600">🛒 Mes Courses</h1>
+            <button id="boutonVider" class="text-sm text-red-500 hover:text-red-700 font-semibold bg-red-50 px-3 py-1 rounded-lg transition-colors hidden">
+                Vider
+            </button>
+        </div>
+
+        <!-- Système d'onglets -->
+        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+            <button id="ongletCourses" class="py-2 px-4 text-blue-600 border-b-2 border-blue-600 font-bold focus:outline-none flex-1 transition-colors whitespace-nowrap">📝 Liste</button>
+            <button id="ongletRecettes" class="py-2 px-4 text-gray-400 hover:text-blue-500 border-b-2 border-transparent font-bold focus:outline-none flex-1 transition-colors whitespace-nowrap">👨‍🍳 Préparation</button>
+            <button id="ongletIdees" class="py-2 px-4 text-gray-400 hover:text-blue-500 border-b-2 border-transparent font-bold focus:outline-none flex-1 transition-colors whitespace-nowrap">💡 Idées</button>
+        </div>
+
+        <!-- VUE 1 : LISTE DE COURSES -->
+        <div id="vueCourses">
+            <!-- Zone de sélection de recettes -->
+            <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <h2 class="text-lg font-bold text-blue-800 mb-3 flex items-center gap-2">
+                    <span>👨‍🍳</span> Idées Recettes
+                </h2>
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="choixRecette" class="w-full sm:flex-1 border-2 border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 bg-white text-gray-700 truncate">
+                            <option value="">-- Choisir une recette (100 dispo) --</option>
+                            <!-- Les options seront ajoutées ici par JavaScript avec des groupes -->
+                        </select>
+                        <div class="flex items-center gap-2 bg-white border-2 border-blue-200 rounded-lg px-2 h-[42px] sm:h-auto">
+                            <span class="text-gray-500 text-lg" title="Nombre de personnes">👥</span>
+                            <input type="number" id="nbPersonnes" value="2" min="1" max="20" class="w-12 focus:outline-none text-center bg-transparent font-semibold text-gray-700" title="Nombre de personnes">
+                        </div>
+                        <button id="boutonAjouterRecette" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto flex-shrink-0">
+                            + Ajouter
+                        </button>
+                    </div>
+                    <!-- Zone pour afficher les recettes sélectionnées -->
+                    <div id="zoneRecettesChoisies" class="hidden mt-2">
+                        <h3 class="text-sm font-semibold text-gray-600 mb-2">Au menu :</h3>
+                        <div id="listeRecettesChoisies" class="flex flex-wrap gap-2">
+                            <!-- Les badges des recettes apparaîtront ici -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zone d'ajout d'un article manuellement -->
+            <div class="flex gap-2 mb-6">
+                <input 
+                    type="text" 
+                    id="saisieArticle" 
+                    class="flex-1 border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 transition-colors" 
+                    placeholder="Ajouter un article (ex: 500g Pommes)..."
+                >
+                <button 
+                    id="boutonAjouter" 
+                    class="bg-blue-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors shadow-md"
+                >
+                    Ajouter
+                </button>
+            </div>
+
+            <!-- La liste où les articles vont apparaître -->
+            <ul id="listeCourses" class="space-y-3">
+                <!-- Les éléments de la liste seront injectés ici par JavaScript -->
+            </ul>
+        </div>
+
+        <!-- VUE 2 : ÉTAPES DES RECETTES -->
+        <div id="vueRecettes" class="hidden space-y-4">
+            <!-- Les fiches de préparation seront injectées ici -->
+        </div>
+
+        <!-- VUE 3 : IDÉES RECETTES (Nouvelle zone) -->
+        <div id="vueIdees" class="hidden">
+            <div class="mb-4 flex flex-col md:flex-row justify-between items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <h2 class="text-lg font-bold text-blue-800 whitespace-nowrap">💡 Inspirations</h2>
+                <div class="flex flex-col sm:flex-row w-full md:w-max gap-2 flex-1 justify-end">
+                    <button id="boutonTirageSort" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap">
+                        🎲 3 Recettes au hasard
+                    </button>
+                    <input type="text" id="rechercheIdee" placeholder="Rechercher (ex: poulet, asie...)" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 w-full sm:max-w-xs">
+                </div>
+            </div>
+            <div id="grilleIdees" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Les cartes idées seront injectées ici -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NOUVEAU : Fenêtre modale de confirmation pour vider la liste -->
+    <div id="modalConfirmation" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Vider la liste ?</h3>
+            <p class="text-gray-600 mb-6 text-sm">Êtes-vous sûr de vouloir supprimer tous les articles et les menus sélectionnés ? Cette action est irréversible.</p>
+            <div class="flex justify-end gap-3">
+                <button id="boutonAnnulerVider" class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded-lg transition-colors">Annuler</button>
+                <button id="boutonConfirmerVider" class="px-4 py-2 bg-red-500 text-white font-semibold hover:bg-red-600 rounded-lg transition-colors shadow-sm">Oui, tout vider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODIFIÉ : Z-index augmenté à z-[60] pour toujours passer au-dessus du tirage au sort -->
+    <div id="modalDetailsRecette" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-[60] px-4" onclick="if(event.target === this) fermerDetailsRecette()">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
+            <button onclick="fermerDetailsRecette()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-3xl font-bold leading-none z-10 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm">&times;</button>
+            <div id="contenuDetailsRecette" class="p-6 overflow-y-auto">
+                <!-- Injecté par JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- NOUVEAU : Fenêtre modale pour le tirage au sort -->
+    <div id="modalTirageSort" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 px-4" onclick="if(event.target === this) fermerTirageSort()">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
+            <button onclick="fermerTirageSort()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-3xl font-bold leading-none z-10 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm">&times;</button>
+            <div class="p-4 sm:p-6 border-b border-gray-100 bg-purple-50 pr-16">
+                <div class="flex items-center gap-3 mb-1">
+                    <h3 class="text-xl sm:text-2xl font-bold text-purple-800">Le destin a choisi...</h3>
+                    <button onclick="ouvrirTirageSort()" class="flex-shrink-0 bg-white text-purple-600 hover:bg-purple-100 border border-purple-200 w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm transition-transform hover:rotate-180 duration-300 text-xl sm:text-2xl flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-purple-400" title="Relancer le tirage">
+                        🎲
+                    </button>
+                </div>
+                <p class="text-purple-600 text-sm">Laissez-vous tenter par l'une de ces 3 recettes !</p>
+            </div>
+            <div id="contenuTirageSort" class="p-6 overflow-y-auto bg-gray-50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Injecté par JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Logique JavaScript -->
+    <script>
+        // Base de données des 100 recettes classées par catégories
+        const recettes = [
+            // ================= ASIE (50 recettes) =================
+            // Nouilles et Soupes
+            { categorie: "Asie", nom: "Ramen express au bœuf", ingredients: [{nom:"Nouilles ramen", qte:80, unite:"g"}, {nom:"Bouillon de bœuf", qte:250, unite:"ml"}, {nom:"Bœuf", qte:100, unite:"g"}, {nom:"Œuf", qte:1, unite:""}], etapes: ["Préparer le bouillon.", "Saisir les tranches de bœuf.", "Cuire les nouilles.", "Ajouter un œuf mollet et servir."] },
+            { categorie: "Asie", nom: "Pad Thaï au poulet", ingredients: [{nom:"Nouilles de riz", qte:80, unite:"g"}, {nom:"Poulet", qte:100, unite:"g"}, {nom:"Cacahuètes", qte:20, unite:"g"}, {nom:"Œuf", qte:1, unite:""}, {nom:"Germes de soja", qte:50, unite:"g"}], etapes: ["Faire sauter le poulet.", "Cuire les nouilles.", "Sauter le tout avec l'œuf et le soja.", "Parsemer de cacahuètes."] },
+            { categorie: "Asie", nom: "Nouilles sautées soja", ingredients: [{nom:"Nouilles aux œufs", qte:100, unite:"g"}, {nom:"Ciboule", qte:1, unite:"botte"}, {nom:"Sauce soja", qte:2, unite:"c.à.s"}, {nom:"Huile de sésame", qte:1, unite:"c.à.s"}], etapes: ["Cuire les nouilles.", "Faire sauter à la poêle avec la ciboule, l'huile de sésame et la sauce soja."] },
+            { categorie: "Asie", nom: "Pho express", ingredients: [{nom:"Bouillon aux épices", qte:250, unite:"ml"}, {nom:"Nouilles de riz", qte:80, unite:"g"}, {nom:"Bœuf fin", qte:100, unite:"g"}, {nom:"Coriandre", qte:1, unite:"poignée"}], etapes: ["Chauffer le bouillon parfumé.", "Disposer les nouilles et le bœuf cru dans le bol.", "Verser le bouillon bouillant par-dessus."] },
+            { categorie: "Asie", nom: "Soupe Miso au tofu", ingredients: [{nom:"Bouillon dashi", qte:200, unite:"ml"}, {nom:"Pâte miso", qte:1, unite:"c.à.s"}, {nom:"Tofu soyeux", qte:50, unite:"g"}, {nom:"Algues wakame", qte:1, unite:"c.à.c"}], etapes: ["Chauffer le bouillon dashi avec les algues.", "Ajouter le tofu en dés.", "Dissoudre la pâte miso hors du feu."] },
+            { categorie: "Asie", nom: "Udon aux crevettes", ingredients: [{nom:"Nouilles Udon", qte:150, unite:"g"}, {nom:"Crevettes", qte:100, unite:"g"}, {nom:"Carottes", qte:0.5, unite:""}, {nom:"Sauce soja", qte:1, unite:"c.à.s"}], etapes: ["Sauter les crevettes et légumes.", "Ajouter les udon précuits et la sauce soja."] },
+            { categorie: "Asie", nom: "Japchae", ingredients: [{nom:"Nouilles patate douce", qte:80, unite:"g"}, {nom:"Huile de sésame", qte:1, unite:"c.à.s"}, {nom:"Légumes croquants", qte:100, unite:"g"}, {nom:"Sauce soja", qte:2, unite:"c.à.s"}], etapes: ["Cuire les nouilles coréennes.", "Sauter les légumes.", "Mélanger le tout avec sauce soja et huile de sésame."] },
+            { categorie: "Asie", nom: "Khao Soi express", ingredients: [{nom:"Lait de coco", qte:150, unite:"ml"}, {nom:"Pâte de curry", qte:1, unite:"c.à.s"}, {nom:"Nouilles aux œufs", qte:100, unite:"g"}, {nom:"Poulet", qte:100, unite:"g"}], etapes: ["Faire revenir le curry et le poulet.", "Ajouter le lait de coco.", "Servir sur les nouilles cuites."] },
+            { categorie: "Asie", nom: "Chow mein aux légumes", ingredients: [{nom:"Nouilles de blé", qte:100, unite:"g"}, {nom:"Carottes", qte:0.5, unite:""}, {nom:"Chou", qte:50, unite:"g"}, {nom:"Sauce soja", qte:2, unite:"c.à.s"}], etapes: ["Sauter le chou et les carottes.", "Ajouter les nouilles et la sauce soja."] },
+            { categorie: "Asie", nom: "Nouilles froides sésame", ingredients: [{nom:"Pâtes", qte:100, unite:"g"}, {nom:"Beurre de cacahuète", qte:1, unite:"c.à.s"}, {nom:"Huile de sésame", qte:1, unite:"c.à.s"}, {nom:"Piment", qte:1, unite:"pincée"}], etapes: ["Cuire et refroidir les pâtes.", "Mélanger avec la sauce beurre de cacahuète, sésame et piment."] },
+            
+            // Riz
+            { categorie: "Asie", nom: "Riz frit (Khao Pad)", ingredients: [{nom:"Riz", qte:100, unite:"g"}, {nom:"Ail", qte:1, unite:"gousse"}, {nom:"Œuf", qte:1, unite:""}, {nom:"Sauce soja", qte:1, unite:"c.à.s"}], etapes: ["Faire sauter l'ail et l'œuf.", "Ajouter le riz cuit froid et la sauce soja."] },
+            { categorie: "Asie", nom: "Riz cantonais", ingredients: [{nom:"Riz", qte:100, unite:"g"}, {nom:"Petits pois", qte:30, unite:"g"}, {nom:"Jambon", qte:50, unite:"g"}, {nom:"Œuf", qte:1, unite:""}], etapes: ["Sauter les petits pois et le jambon.", "Brouiller l'œuf, ajouter le riz et mélanger."] },
+            { categorie: "Asie", nom: "Oyakodon", ingredients: [{nom:"Poulet", qte:100, unite:"g"}, {nom:"Œuf", qte:1, unite:""}, {nom:"Bouillon dashi", qte:50, unite:"ml"}, {nom:"Riz", qte:100, unite:"g"}], etapes: ["Mijoter le poulet dans le dashi.", "Verser l'œuf battu par-dessus.", "Servir sur un bol de riz chaud."] },
+            { categorie: "Asie", nom: "Bibimbap à la poêle", ingredients: [{nom:"Riz", qte:100, unite:"g"}, {nom:"Légumes variés", qte:100, unite:"g"}, {nom:"Viande hachée", qte:50, unite:"g"}, {nom:"Œuf", qte:1, unite:""}, {nom:"Gochujang", qte:1, unite:"c.à.s"}], etapes: ["Sauter les légumes et la viande.", "Servir sur le riz avec un œuf au plat et la pâte de piment."] },
+            { categorie: "Asie", nom: "Omurice", ingredients: [{nom:"Riz", qte:100, unite:"g"}, {nom:"Ketchup", qte:2, unite:"c.à.s"}, {nom:"Œufs", qte:2, unite:""}], etapes: ["Faire un riz frit à la tomate.", "L'envelopper dans une fine omelette."] },
+            { categorie: "Asie", nom: "Onigiri au thon mayo", ingredients: [{nom:"Riz à sushi", qte:100, unite:"g"}, {nom:"Thon", qte:30, unite:"g"}, {nom:"Mayonnaise", qte:1, unite:"c.à.s"}, {nom:"Algue nori", qte:1, unite:"feuille"}], etapes: ["Mélanger thon et mayo.", "Former des triangles de riz farcis au thon.", "Envelopper d'une algue nori."] },
+            { categorie: "Asie", nom: "Congee (Bouillie)", ingredients: [{nom:"Riz", qte:50, unite:"g"}, {nom:"Bouillon de poulet", qte:400, unite:"ml"}, {nom:"Gingembre", qte:1, unite:"morceau"}], etapes: ["Cuire le riz longuement dans le bouillon avec le gingembre jusqu'à obtenir une bouillie."] },
+            { categorie: "Asie", nom: "Sushi bowl (Chirashi)", ingredients: [{nom:"Riz vinaigré", qte:100, unite:"g"}, {nom:"Saumon cru", qte:80, unite:"g"}, {nom:"Avocat", qte:0.5, unite:""}, {nom:"Edamame", qte:30, unite:"g"}], etapes: ["Disposer le saumon, l'avocat et les edamames sur le riz vinaigré froid."] },
+            { categorie: "Asie", nom: "Riz sauté au Kimchi", ingredients: [{nom:"Riz", qte:100, unite:"g"}, {nom:"Kimchi", qte:50, unite:"g"}, {nom:"Œuf", qte:1, unite:""}, {nom:"Huile de sésame", qte:1, unite:"c.à.c"}], etapes: ["Sauter le riz avec le kimchi.", "Servir avec un œuf au plat dessus."] },
+            { categorie: "Asie", nom: "Riz gluant à la mangue", ingredients: [{nom:"Riz gluant", qte:80, unite:"g"}, {nom:"Lait de coco", qte:100, unite:"ml"}, {nom:"Sucre", qte:20, unite:"g"}, {nom:"Mangue", qte:0.5, unite:""}], etapes: ["Cuire le riz avec le lait de coco sucré.", "Servir avec la mangue fraîche."] },
+            
+            // Viandes et Poissons
+            { categorie: "Asie", nom: "Poulet Teriyaki", ingredients: [{nom:"Blanc de poulet", qte:150, unite:"g"}, {nom:"Sauce soja", qte:2, unite:"c.à.s"}, {nom:"Mirin", qte:1, unite:"c.à.s"}, {nom:"Sucre", qte:1, unite:"c.à.c"}], etapes: ["Poêler le poulet.", "Déglacer avec soja, mirin et sucre pour laquer la viande."] },
+            { categorie: "Asie", nom: "Bœuf aux oignons", ingredients: [{nom:"Bœuf", qte:150, unite:"g"}, {nom:"Oignons", qte:1, unite:""}, {nom:"Sauce soja", qte:1, unite:"c.à.s"}, {nom:"Huile", qte:1, unite:"c.à.s"}], etapes: ["Mariner la viande.", "Sauter rapidement au wok avec les oignons."] },
+            { categorie: "Asie", nom: "Porc au caramel", ingredients: [{nom:"Porc", qte:150, unite:"g"}, {nom:"Nuoc-mâm", qte:1, unite:"c.à.s"}, {nom:"Sucre", qte:20, unite:"g"}], etapes: ["Caraméliser le sucre.", "Ajouter la viande et le nuoc-mâm, laisser mijoter."] },
+            { categorie: "Asie", nom: "Crevettes ail gingembre", ingredients: [{nom:"Crevettes", qte:150, unite:"g"}, {nom:"Ail", qte:2, unite:"gousses"}, {nom:"Gingembre frais", qte:1, unite:"morceau"}], etapes: ["Sauter les crevettes au wok avec l'ail et le gingembre."] },
+            { categorie: "Asie", nom: "Poulet aigre-douce", ingredients: [{nom:"Poulet", qte:150, unite:"g"}, {nom:"Poivrons", qte:0.5, unite:""}, {nom:"Ananas", qte:50, unite:"g"}, {nom:"Ketchup", qte:2, unite:"c.à.s"}], etapes: ["Sauter poulet et poivrons.", "Ajouter ananas, ketchup et un trait de vinaigre."] },
+            { categorie: "Asie", nom: "Pad Kra Pao", ingredients: [{nom:"Bœuf haché", qte:150, unite:"g"}, {nom:"Piment", qte:1, unite:""}, {nom:"Basilic", qte:1, unite:"botte"}, {nom:"Sauce soja", qte:1, unite:"c.à.s"}], etapes: ["Sauter le bœuf au piment.", "Ajouter le basilic sacré et la sauce soja en fin de cuisson."] },
+            { categorie: "Asie", nom: "Curry vert de poulet", ingredients: [{nom:"Poulet", qte:150, unite:"g"}, {nom:"Pâte de curry vert", qte:1, unite:"c.à.s"}, {nom:"Lait de coco", qte:150, unite:"ml"}], etapes: ["Mijoter le poulet avec la pâte de curry et le lait de coco."] },
+            { categorie: "Asie", nom: "Poulet Tikka Masala", ingredients: [{nom:"Poulet", qte:150, unite:"g"}, {nom:"Sauce tomate", qte:100, unite:"g"}, {nom:"Épices indiennes", qte:1, unite:"c.à.s"}], etapes: ["Poêler le poulet.", "Mijoter dans la sauce tomate épicée."] },
+            { categorie: "Asie", nom: "Saumon glacé soja", ingredients: [{nom:"Pavé de saumon", qte:1, unite:""}, {nom:"Sauce soja", qte:1, unite:"c.à.s"}, {nom:"Miel", qte:1, unite:"c.à.s"}], etapes: ["Cuire le saumon à la poêle.", "Déglacer sauce soja et miel."] },
+            { categorie: "Asie", nom: "Boulettes teriyaki", ingredients: [{nom:"Boulettes de viande", qte:150, unite:"g"}, {nom:"Sauce teriyaki", qte:3, unite:"c.à.s"}], etapes: ["Poêler les boulettes.", "Les napper de sauce teriyaki."] },
+            
+            // Végétarien
+            { categorie: "Asie", nom: "Mapo Tofu express", ingredients: [{nom:"Tofu soyeux", qte:150, unite:"g"}, {nom:"Sauce pimentée", qte:2, unite:"c.à.s"}, {nom:"Ciboule", qte:0.5, unite:"botte"}], etapes: ["Chauffer la sauce épicée.", "Ajouter le tofu délicatement et mijoter."] },
+            { categorie: "Asie", nom: "Dahl de lentilles corail", ingredients: [{nom:"Lentilles corail", qte:80, unite:"g"}, {nom:"Lait de coco", qte:100, unite:"ml"}, {nom:"Épices indiennes", qte:1, unite:"c.à.s"}], etapes: ["Cuire les lentilles avec les épices et le lait de coco jusqu'à obtention d'une purée."] },
+            { categorie: "Asie", nom: "Chou pak choï sauté", ingredients: [{nom:"Chou pak choï", qte:1, unite:""}, {nom:"Ail", qte:2, unite:"gousses"}, {nom:"Sauce soja", qte:1, unite:"c.à.s"}], etapes: ["Saisir le chou à la poêle avec l'ail.", "Déglacer à la sauce soja."] },
+            { categorie: "Asie", nom: "Salade concombre", ingredients: [{nom:"Concombre", qte:0.5, unite:""}, {nom:"Ail", qte:1, unite:"gousse"}, {nom:"Vinaigre de riz", qte:1, unite:"c.à.s"}, {nom:"Huile pimentée", qte:1, unite:"c.à.c"}], etapes: ["Taper et écraser le concombre.", "Assaisonner d'ail, vinaigre et huile."] },
+            { categorie: "Asie", nom: "Crêpes à la ciboule", ingredients: [{nom:"Farine", qte:80, unite:"g"}, {nom:"Eau", qte:50, unite:"ml"}, {nom:"Ciboule", qte:1, unite:"botte"}], etapes: ["Faire une pâte, y étaler la ciboule.", "Poêler jusqu'à ce qu'elle soit croustillante."] },
+            { categorie: "Asie", nom: "Rouleaux de printemps", ingredients: [{nom:"Galettes de riz", qte:3, unite:""}, {nom:"Vermicelles", qte:50, unite:"g"}, {nom:"Crevettes", qte:50, unite:"g"}, {nom:"Menthe", qte:1, unite:"poignée"}], etapes: ["Humidifier les galettes.", "Garnir de vermicelles, crevettes et salade, puis rouler."] },
+            { categorie: "Asie", nom: "Curry pois chiches", ingredients: [{nom:"Pois chiches", qte:100, unite:"g"}, {nom:"Curry", qte:1, unite:"c.à.s"}, {nom:"Tomates", qte:1, unite:""}, {nom:"Lait de coco", qte:100, unite:"ml"}], etapes: ["Mijoter les pois chiches avec tomates, curry et lait de coco."] },
+            { categorie: "Asie", nom: "Aubergines sauce soja", ingredients: [{nom:"Aubergines", qte:1, unite:""}, {nom:"Ail", qte:1, unite:"gousse"}, {nom:"Gingembre", qte:1, unite:"morceau"}, {nom:"Sauce soja", qte:2, unite:"c.à.s"}], etapes: ["Poêler les aubergines fondantes à l'ail et gingembre.", "Ajouter la sauce soja."] },
+            { categorie: "Asie", nom: "Tofu frit sauce piment", ingredients: [{nom:"Tofu ferme", qte:100, unite:"g"}, {nom:"Sauce piment doux", qte:2, unite:"c.à.s"}], etapes: ["Faire dorer les cubes de tofu à la poêle.", "Napper de sauce."] },
+            { categorie: "Asie", nom: "Som Tum (Papaye)", ingredients: [{nom:"Papaye verte", qte:100, unite:"g"}, {nom:"Tomates cerises", qte:50, unite:"g"}, {nom:"Cacahuètes", qte:20, unite:"g"}, {nom:"Citron vert", qte:0.5, unite:""}], etapes: ["Râper la papaye.", "Piler avec tomates, cacahuètes, piment et jus de citron."] },
+            
+            // Street Food & Desserts
+            { categorie: "Asie", nom: "Gyozas", ingredients: [{nom:"Raviolis japonais (Gyozas)", qte:6, unite:""}, {nom:"Huile de sésame", qte:1, unite:"c.à.s"}], etapes: ["Dorer les gyozas à la poêle.", "Ajouter un fond d'eau, couvrir et cuire à l'étouffée."] },
+            { categorie: "Asie", nom: "Baozi (brioches vapeur)", ingredients: [{nom:"Baozi surgelés ou frais", qte:2, unite:""}], etapes: ["Cuire à la vapeur dans un panier en bambou 15 minutes."] },
+            { categorie: "Asie", nom: "Yakitori poulet", ingredients: [{nom:"Brochettes de poulet", qte:3, unite:""}, {nom:"Sauce Yakitori", qte:2, unite:"c.à.s"}], etapes: ["Poêler les brochettes.", "Les laquer avec la sauce."] },
+            { categorie: "Asie", nom: "Banh Xeo", ingredients: [{nom:"Farine de riz", qte:50, unite:"g"}, {nom:"Curcuma", qte:1, unite:"c.à.c"}, {nom:"Porc", qte:50, unite:"g"}, {nom:"Germes de soja", qte:50, unite:"g"}], etapes: ["Faire une pâte avec farine, eau et curcuma.", "Cuire une crêpe croustillante, garnir de porc et soja."] },
+            { categorie: "Asie", nom: "Tamagoyaki", ingredients: [{nom:"Œufs", qte:3, unite:""}, {nom:"Sucre", qte:1, unite:"c.à.c"}, {nom:"Sauce soja", qte:1, unite:"c.à.c"}], etapes: ["Battre les œufs avec sucre et soja.", "Cuire en fine couche et rouler l'omelette plusieurs fois dans la poêle."] },
+            { categorie: "Asie", nom: "Perles de coco", ingredients: [{nom:"Farine de riz gluant", qte:50, unite:"g"}, {nom:"Haricots mungo sucrés", qte:30, unite:"g"}, {nom:"Coco râpée", qte:20, unite:"g"}], etapes: ["Former des boules de pâte farcies à la pâte de mungo.", "Cuire à la vapeur, rouler dans la coco."] },
+            { categorie: "Asie", nom: "Soupe haricots rouges", ingredients: [{nom:"Haricots rouges sucrés (Azuki)", qte:80, unite:"g"}, {nom:"Sucre", qte:20, unite:"g"}], etapes: ["Mijoter longuement pour obtenir une soupe réconfortante."] },
+            { categorie: "Asie", nom: "Bubble tea", ingredients: [{nom:"Perles de Tapioca", qte:30, unite:"g"}, {nom:"Thé noir", qte:200, unite:"ml"}, {nom:"Lait", qte:50, unite:"ml"}], etapes: ["Cuire le tapioca.", "Mélanger avec le thé froid et le lait."] },
+            { categorie: "Asie", nom: "Dorayaki", ingredients: [{nom:"Pâte à pancakes", qte:100, unite:"g"}, {nom:"Pâte de haricots rouges", qte:50, unite:"g"}], etapes: ["Cuire 2 petits pancakes.", "Fourrer avec la pâte de haricots."] },
+            { categorie: "Asie", nom: "Tangyuan", ingredients: [{nom:"Farine de riz gluant", qte:50, unite:"g"}, {nom:"Sirop de gingembre", qte:100, unite:"ml"}], etapes: ["Former des boulettes de riz gluant.", "Servir dans un sirop chaud au gingembre."] },
+
+            // ================= EUROPE (50 recettes) =================
+            // Pâtes et Féculents
+            { categorie: "Europe", nom: "Pâtes Carbonara (vraies)", ingredients: [{nom:"Pâtes", qte:100, unite:"g"}, {nom:"Guanciale", qte:50, unite:"g"}, {nom:"Pecorino", qte:30, unite:"g"}, {nom:"Jaunes d'œufs", qte:2, unite:""}, {nom:"Poivre noir", qte:1, unite:"pincée"}], etapes: ["Cuire les pâtes.", "Dorer le guanciale.", "Mélanger pâtes, fromage, jaunes et poivre hors du feu avec un peu d'eau de cuisson."] },
+            { categorie: "Europe", nom: "Pâtes au pesto", ingredients: [{nom:"Pâtes", qte:100, unite:"g"}, {nom:"Pesto frais", qte:2, unite:"c.à.s"}], etapes: ["Cuire les pâtes.", "Mélanger avec le pesto frais hors du feu."] },
+            { categorie: "Europe", nom: "Spaghetti aglio olio", ingredients: [{nom:"Spaghetti", qte:100, unite:"g"}, {nom:"Ail", qte:2, unite:"gousses"}, {nom:"Huile d'olive", qte:3, unite:"c.à.s"}, {nom:"Piment", qte:1, unite:"pincée"}], etapes: ["Faire revenir l'ail et le piment dans l'huile.", "Ajouter les pâtes cuites."] },
+            { categorie: "Europe", nom: "Pâtes sauce tomate", ingredients: [{nom:"Pâtes", qte:100, unite:"g"}, {nom:"Sauce tomate", qte:100, unite:"g"}, {nom:"Basilic frais", qte:1, unite:"poignée"}], etapes: ["Mijoter rapidement la sauce tomate.", "Mélanger avec les pâtes et le basilic."] },
+            { categorie: "Europe", nom: "Mac & Cheese casserole", ingredients: [{nom:"Macaroni", qte:100, unite:"g"}, {nom:"Crème", qte:50, unite:"ml"}, {nom:"Cheddar", qte:50, unite:"g"}], etapes: ["Cuire les pâtes.", "Faire fondre le cheddar dans la crème sur le feu et mélanger."] },
+            { categorie: "Europe", nom: "Pâtes thon citron", ingredients: [{nom:"Pâtes", qte:100, unite:"g"}, {nom:"Thon en boîte", qte:50, unite:"g"}, {nom:"Citron", qte:0.5, unite:""}, {nom:"Persil", qte:1, unite:"pincée"}], etapes: ["Cuire les pâtes.", "Mélanger hors du feu avec thon, citron, huile d'olive et persil."] },
+            { categorie: "Europe", nom: "Gnocchis beurre sauge", ingredients: [{nom:"Gnocchis", qte:150, unite:"g"}, {nom:"Beurre", qte:20, unite:"g"}, {nom:"Sauge fraîche", qte:5, unite:"feuilles"}], etapes: ["Poêler les gnocchis dans le beurre noisette aromatisé à la sauge."] },
+            { categorie: "Europe", nom: "Pâtes cacio e pepe", ingredients: [{nom:"Pâtes", qte:100, unite:"g"}, {nom:"Pecorino", qte:40, unite:"g"}, {nom:"Poivre noir", qte:1, unite:"c.à.c"}], etapes: ["Émulsionner l'eau de cuisson avec le pecorino et le poivre.", "Enrober les pâtes."] },
+            { categorie: "Europe", nom: "Penne all'arrabbiata", ingredients: [{nom:"Penne", qte:100, unite:"g"}, {nom:"Sauce tomate", qte:100, unite:"g"}, {nom:"Ail", qte:1, unite:"gousse"}, {nom:"Piment", qte:1, unite:"pincée"}], etapes: ["Faire revenir ail et piment.", "Ajouter la sauce tomate et mélanger aux pâtes."] },
+            { categorie: "Europe", nom: "Coquillettes façon risotto", ingredients: [{nom:"Coquillettes", qte:100, unite:"g"}, {nom:"Dés de jambon", qte:50, unite:"g"}, {nom:"Crème fraîche", qte:2, unite:"c.à.s"}, {nom:"Gruyère", qte:30, unite:"g"}], etapes: ["Cuire les coquillettes comme un risotto (absorption).", "Ajouter jambon, crème et gruyère."] },
+            
+            // Viandes et Volailles
+            { categorie: "Europe", nom: "Escalope milanaise", ingredients: [{nom:"Escalope de veau", qte:1, unite:""}, {nom:"Chapelure", qte:30, unite:"g"}, {nom:"Œuf", qte:1, unite:""}], etapes: ["Paner la viande.", "Frire à la poêle dans un mélange huile/beurre."] },
+            { categorie: "Europe", nom: "Poulet basquaise express", ingredients: [{nom:"Poulet", qte:150, unite:"g"}, {nom:"Poivrons", qte:0.5, unite:""}, {nom:"Tomates concassées", qte:100, unite:"g"}], etapes: ["Saisir le poulet.", "Mijoter avec poivrons et tomates à la casserole."] },
+            { categorie: "Europe", nom: "Steak au poivre", ingredients: [{nom:"Steak de bœuf", qte:1, unite:""}, {nom:"Crème liquide", qte:50, unite:"ml"}, {nom:"Poivre en grains", qte:1, unite:"c.à.c"}], etapes: ["Poêler la viande.", "Déglacer à la crème avec les grains de poivre."] },
+            { categorie: "Europe", nom: "Magret de canard", ingredients: [{nom:"Magret de canard", qte:0.5, unite:""}], etapes: ["Cuire côté peau pour fondre le gras.", "Retourner et saisir."] },
+            { categorie: "Europe", nom: "Saucisses purée", ingredients: [{nom:"Saucisses", qte:2, unite:""}, {nom:"Purée de pommes de terre", qte:200, unite:"g"}], etapes: ["Griller les saucisses.", "Réchauffer la purée."] },
+            { categorie: "Europe", nom: "Cordons bleus maison", ingredients: [{nom:"Escalope de dinde", qte:1, unite:""}, {nom:"Jambon", qte:1, unite:"tranche"}, {nom:"Fromage fondu", qte:1, unite:"tranche"}, {nom:"Chapelure", qte:30, unite:"g"}], etapes: ["Farcir l'escalope avec jambon/fromage.", "Paner et cuire à la poêle."] },
+            { categorie: "Europe", nom: "Boulettes sauce tomate", ingredients: [{nom:"Boulettes de bœuf", qte:150, unite:"g"}, {nom:"Sauce tomate", qte:150, unite:"g"}], etapes: ["Cuire les boulettes directement dans la sauce tomate à la casserole."] },
+            { categorie: "Europe", nom: "Émincé poulet champignons", ingredients: [{nom:"Poulet", qte:150, unite:"g"}, {nom:"Champignons", qte:100, unite:"g"}, {nom:"Crème fraîche", qte:50, unite:"ml"}], etapes: ["Sauter le poulet et les champignons.", "Ajouter la crème fraîche."] },
+            { categorie: "Europe", nom: "Côte de porc moutarde", ingredients: [{nom:"Côte de porc", qte:1, unite:""}, {nom:"Moutarde", qte:1, unite:"c.à.s"}, {nom:"Crème fraîche", qte:2, unite:"c.à.s"}], etapes: ["Saisir la côte de porc.", "Déglacer avec crème et moutarde."] },
+            { categorie: "Europe", nom: "Chili con carne express", ingredients: [{nom:"Viande hachée", qte:150, unite:"g"}, {nom:"Haricots rouges", qte:100, unite:"g"}, {nom:"Tomates concassées", qte:100, unite:"g"}], etapes: ["Faire revenir la viande.", "Mijoter avec haricots et tomates."] },
+
+            // Produits de la Mer
+            { categorie: "Europe", nom: "Moules marinières", ingredients: [{nom:"Moules", qte:400, unite:"g"}, {nom:"Vin blanc", qte:50, unite:"ml"}, {nom:"Échalote", qte:1, unite:""}], etapes: ["Cuire à couvert avec vin blanc, échalotes et persil jusqu'à ouverture."] },
+            { categorie: "Europe", nom: "Saumon à l'aneth", ingredients: [{nom:"Pavé de saumon", qte:1, unite:""}, {nom:"Aneth", qte:1, unite:"pincée"}], etapes: ["Cuire à l'unilatérale côté peau à la poêle.", "Parsemer d'aneth."] },
+            { categorie: "Europe", nom: "Gambas al ajillo", ingredients: [{nom:"Crevettes/Gambas", qte:150, unite:"g"}, {nom:"Huile d'olive", qte:3, unite:"c.à.s"}, {nom:"Ail", qte:2, unite:"gousses"}, {nom:"Piment", qte:1, unite:"pincée"}], etapes: ["Saisir les gambas dans l'huile bouillante avec ail et piment."] },
+            { categorie: "Europe", nom: "Cabillaud beurre blanc", ingredients: [{nom:"Dos de cabillaud", qte:1, unite:""}, {nom:"Beurre", qte:20, unite:"g"}, {nom:"Échalote", qte:0.5, unite:""}], etapes: ["Poêler le poisson.", "Faire une sauce rapide échalotes, vin, beurre."] },
+            { categorie: "Europe", nom: "Calamars persillade", ingredients: [{nom:"Rondelles de calamars", qte:150, unite:"g"}, {nom:"Ail", qte:1, unite:"gousse"}, {nom:"Persil", qte:1, unite:"poignée"}], etapes: ["Cuire rapidement à feu vif à la poêle avec ail et persil."] },
+            { categorie: "Europe", nom: "Tartare de saumon", ingredients: [{nom:"Saumon cru", qte:150, unite:"g"}, {nom:"Citron", qte:0.5, unite:""}, {nom:"Aneth", qte:1, unite:"pincée"}], etapes: ["Couper le saumon en dés.", "Assaisonner avec citron, huile et aneth (sans cuisson)."] },
+            { categorie: "Europe", nom: "Ceviche de daurade", ingredients: [{nom:"Filet de daurade", qte:150, unite:"g"}, {nom:"Citron vert", qte:1, unite:""}, {nom:"Oignon rouge", qte:0.5, unite:""}], etapes: ["Laisser 'cuire' le poisson cru dans le jus de citron avec l'oignon."] },
+            { categorie: "Europe", nom: "Poêlée de Saint-Jacques", ingredients: [{nom:"Noix de Saint-Jacques", qte:4, unite:""}, {nom:"Beurre", qte:15, unite:"g"}], etapes: ["Saisir une minute par face dans un beurre noisette."] },
+            { categorie: "Europe", nom: "Truite aux amandes", ingredients: [{nom:"Truite", qte:1, unite:""}, {nom:"Amandes effilées", qte:20, unite:"g"}, {nom:"Beurre", qte:10, unite:"g"}], etapes: ["Poêler la truite au beurre.", "Parsemer d'amandes grillées."] },
+            { categorie: "Europe", nom: "Salade niçoise", ingredients: [{nom:"Œufs", qte:1, unite:""}, {nom:"Thon", qte:50, unite:"g"}, {nom:"Anchois", qte:3, unite:""}, {nom:"Crudités (tomates, salade)", qte:100, unite:"g"}], etapes: ["Cuire l'œuf dur.", "Dresser la salade froide avec les autres ingrédients."] },
+
+            // Végétarien, Œufs, Fromages
+            { categorie: "Europe", nom: "Omelette champignons", ingredients: [{nom:"Œufs", qte:3, unite:""}, {nom:"Champignons", qte:50, unite:"g"}, {nom:"Beurre", qte:10, unite:"g"}], etapes: ["Sauter les champignons.", "Verser les œufs battus et cuire baveux."] },
+            { categorie: "Europe", nom: "Œufs brouillés ciboulette", ingredients: [{nom:"Œufs", qte:3, unite:""}, {nom:"Ciboulette", qte:1, unite:"poignée"}, {nom:"Beurre", qte:15, unite:"g"}], etapes: ["Cuire à feu très doux en remuant constamment avec du beurre."] },
+            { categorie: "Europe", nom: "Fondue savoyarde", ingredients: [{nom:"Fromage à fondue", qte:200, unite:"g"}, {nom:"Vin blanc", qte:50, unite:"ml"}, {nom:"Ail", qte:1, unite:"gousse"}], etapes: ["Frotter la casserole à l'ail.", "Faire fondre le fromage dans le vin blanc bouillant."] },
+            { categorie: "Europe", nom: "Croque-monsieur poêle", ingredients: [{nom:"Pain de mie", qte:2, unite:"tranches"}, {nom:"Jambon", qte:1, unite:"tranche"}, {nom:"Fromage", qte:30, unite:"g"}, {nom:"Beurre", qte:15, unite:"g"}], etapes: ["Dorer le croque-monsieur dans du beurre à la poêle."] },
+            { categorie: "Europe", nom: "Galette bretonne", ingredients: [{nom:"Galette de sarrasin", qte:1, unite:""}, {nom:"Œuf", qte:1, unite:""}, {nom:"Jambon", qte:1, unite:"tranche"}, {nom:"Fromage", qte:30, unite:"g"}], etapes: ["Chauffer la galette à la poêle.", "Garnir au centre d'œuf, jambon et fromage."] },
+            { categorie: "Europe", nom: "Piperade basque", ingredients: [{nom:"Poivrons", qte:1, unite:""}, {nom:"Tomates", qte:2, unite:""}, {nom:"Oignons", qte:1, unite:""}, {nom:"Piment d'Espelette", qte:1, unite:"pincée"}], etapes: ["Mijoter poivrons, tomates, oignons et piment à la casserole."] },
+            { categorie: "Europe", nom: "Risotto champignons", ingredients: [{nom:"Riz Arborio", qte:80, unite:"g"}, {nom:"Champignons", qte:50, unite:"g"}, {nom:"Bouillon", qte:250, unite:"ml"}], etapes: ["Nacrer le riz.", "Ajouter le bouillon louche par louche. Incorporer les champignons à la fin."] },
+            { categorie: "Europe", nom: "Œufs cocotte", ingredients: [{nom:"Œuf", qte:1, unite:""}, {nom:"Crème", qte:2, unite:"c.à.s"}, {nom:"Ciboulette", qte:1, unite:"pincée"}], etapes: ["Casser l'œuf dans un ramequin avec la crème.", "Cuire au bain-marie ou au micro-ondes."] },
+            { categorie: "Europe", nom: "Shakshuka", ingredients: [{nom:"Œufs", qte:2, unite:""}, {nom:"Compotée tomates/poivrons", qte:150, unite:"g"}], etapes: ["Pocher les œufs directement dans la compotée brûlante à la poêle."] },
+            { categorie: "Europe", nom: "Gazpacho andalou", ingredients: [{nom:"Tomates", qte:2, unite:""}, {nom:"Poivron", qte:0.5, unite:""}, {nom:"Concombre", qte:0.5, unite:""}], etapes: ["Mixer tous les légumes crus ensemble à froid."] },
+
+            // Desserts
+            { categorie: "Europe", nom: "Crêpes sucre", ingredients: [{nom:"Pâte à crêpes", qte:100, unite:"g"}, {nom:"Sucre", qte:1, unite:"c.à.s"}], etapes: ["Cuire la crêpe à la poêle.", "Saupoudrer de sucre."] },
+            { categorie: "Europe", nom: "Mousse au chocolat", ingredients: [{nom:"Chocolat noir", qte:50, unite:"g"}, {nom:"Œufs", qte:1.5, unite:""}], etapes: ["Mélanger les jaunes au chocolat fondu.", "Incorporer les blancs en neige (sans cuisson)."] },
+            { categorie: "Europe", nom: "Tiramisu", ingredients: [{nom:"Mascarpone", qte:50, unite:"g"}, {nom:"Biscuits cuillère", qte:3, unite:""}, {nom:"Café", qte:1, unite:"tasse"}], etapes: ["Tremper les biscuits dans le café.", "Monter le tiramisu en couches (sans cuisson)."] },
+            { categorie: "Europe", nom: "Panna cotta", ingredients: [{nom:"Crème liquide", qte:100, unite:"ml"}, {nom:"Gélatine", qte:1, unite:"feuille"}, {nom:"Sucre", qte:10, unite:"g"}], etapes: ["Chauffer la crème et le sucre.", "Dissoudre la gélatine, mettre au frais."] },
+            { categorie: "Europe", nom: "Riz au lait", ingredients: [{nom:"Riz rond", qte:30, unite:"g"}, {nom:"Lait", qte:200, unite:"ml"}, {nom:"Sucre vanillé", qte:1, unite:"sachet"}], etapes: ["Cuire longuement le riz dans le lait sucré à la casserole."] },
+            { categorie: "Europe", nom: "Gâteau de crêpes", ingredients: [{nom:"Crêpes", qte:5, unite:""}, {nom:"Pâte à tartiner", qte:50, unite:"g"}], etapes: ["Empiler les crêpes.", "Intercaler avec la garniture sucrée."] },
+            { categorie: "Europe", nom: "Fraises chantilly", ingredients: [{nom:"Fraises", qte:100, unite:"g"}, {nom:"Crème liquide entière", qte:50, unite:"ml"}, {nom:"Sucre glace", qte:1, unite:"c.à.s"}], etapes: ["Monter la crème bien froide en chantilly.", "Servir sur les fraises."] },
+            { categorie: "Europe", nom: "Compote pommes maison", ingredients: [{nom:"Pommes", qte:2, unite:""}, {nom:"Eau", qte:2, unite:"c.à.s"}], etapes: ["Couper les pommes.", "Réduire en purée à feu doux dans une casserole."] },
+            { categorie: "Europe", nom: "Île flottante", ingredients: [{nom:"Crème anglaise", qte:100, unite:"ml"}, {nom:"Blancs d'œufs", qte:1, unite:""}], etapes: ["Cuire les blancs montés 30s au micro-ondes.", "Servir sur la crème anglaise."] },
+            { categorie: "Europe", nom: "Mug cake chocolat", ingredients: [{nom:"Farine", qte:20, unite:"g"}, {nom:"Chocolat noir", qte:30, unite:"g"}, {nom:"Œuf", qte:1, unite:""}, {nom:"Beurre", qte:20, unite:"g"}], etapes: ["Mélanger le tout dans un mug.", "Cuire 1 minute au micro-ondes."] }
+        ];
+
+        // --- GESTION DE L'ÉTAT ---
+        let appState = {
+            articles: [], // { nom: "Pommes", quantite: 1, unite: "kg", coche: false }
+            menus: [],    // [{ nom: "Quiche Lorraine", personnes: 2 }, ...]
+            ongletActif: 'courses' 
+        };
+
+        // --- ÉLÉMENTS DU DOM ---
+        const ui = {
+            champSaisie: document.getElementById('saisieArticle'),
+            boutonAjouter: document.getElementById('boutonAjouter'),
+            listeCourses: document.getElementById('listeCourses'),
+            choixRecette: document.getElementById('choixRecette'),
+            nbPersonnes: document.getElementById('nbPersonnes'),
+            boutonAjouterRecette: document.getElementById('boutonAjouterRecette'),
+            zoneRecettesChoisies: document.getElementById('zoneRecettesChoisies'),
+            listeRecettesChoisies: document.getElementById('listeRecettesChoisies'),
+            boutonVider: document.getElementById('boutonVider'),
+            
+            ongletCourses: document.getElementById('ongletCourses'),
+            ongletRecettes: document.getElementById('ongletRecettes'),
+            ongletIdees: document.getElementById('ongletIdees'),
+            vueCourses: document.getElementById('vueCourses'),
+            vueRecettes: document.getElementById('vueRecettes'),
+            vueIdees: document.getElementById('vueIdees'),
+            
+            rechercheIdee: document.getElementById('rechercheIdee'),
+            grilleIdees: document.getElementById('grilleIdees'),
+            boutonTirageSort: document.getElementById('boutonTirageSort'),
+
+            // Récupération des éléments de la fenêtre modale
+            modalConfirmation: document.getElementById('modalConfirmation'),
+            boutonAnnulerVider: document.getElementById('boutonAnnulerVider'),
+            boutonConfirmerVider: document.getElementById('boutonConfirmerVider'),
+            
+            // Modale détails recette
+            modalDetailsRecette: document.getElementById('modalDetailsRecette'),
+            contenuDetailsRecette: document.getElementById('contenuDetailsRecette'),
+
+            // Modale tirage au sort
+            modalTirageSort: document.getElementById('modalTirageSort'),
+            contenuTirageSort: document.getElementById('contenuTirageSort')
+        };
+
+        // --- GÉNÉRATEUR DE DESCRIPTIONS (Force de proposition) ---
+        function genererDescriptionGourmande(recette) {
+            const i1 = recette.ingredients[0] ? recette.ingredients[0].nom.toLowerCase() : '';
+            const i2 = recette.ingredients[1] ? recette.ingredients[1].nom.toLowerCase() : '';
+            const temps = parseInt(recette.temps) || 30;
+
+            const phrasesAsie = [
+                `Un aller simple pour l'Asie ! Découvrez les saveurs authentiques du duo ${i1} et ${i2}.`,
+                `L'équilibre parfait des saveurs asiatiques. Un plat parfumé mettant à l'honneur de bons ${i1}.`,
+                `Street food à la maison ! Une recette savoureuse et dépaysante à base de ${i1}.`,
+                `Réconfortant et généreux, ce plat incontournable ravira les amateurs de ${i2 || i1}.`
+            ];
+
+            const phrasesEurope = [
+                `Un grand classique généreux et réconfortant. La tradition a du bon, surtout avec de bons ${i1} !`,
+                `Comme au restaurant ou chez grand-mère. Un plat convivial sublimant le mariage ${i1} et ${i2}.`,
+                `Simple, authentique et terriblement savoureux. Idéal pour partager un bon repas.`,
+                `Une recette chaleureuse et gourmande qui met en valeur la qualité de ses ingrédients.`
+            ];
+
+            const phrasesRapides = [
+                `Idéal pour les soirs pressés ! Du ${i1}, un peu de ${i2}, et le tour est joué en un clin d'œil.`,
+                `Sur le pouce mais 100% fait maison : savourez ce classique express et gourmand.`
+            ];
+
+            let templates = recette.categorie === "Asie" ? phrasesAsie : phrasesEurope;
+            
+            // Si la recette est rapide (<= 20 min), on ajoute les phrases express aux possibilités
+            if (temps <= 20) templates = [...templates, ...phrasesRapides];
+
+            // Sélection pseudo-aléatoire basée sur la longueur du nom pour que la description reste la même pour une recette donnée
+            const index = recette.nom.length % templates.length;
+            return templates[index];
+        }
+
+        // --- GÉNÉRATEUR D'IMAGES 100% HORS-LIGNE ---
+        function obtenirEmoji(recette) {
+            const nom = recette.nom.toLowerCase();
+            if(nom.includes('pâte') || nom.includes('spaghetti') || nom.includes('macaroni') || nom.includes('lasagne') || nom.includes('nouille') || nom.includes('udon') || nom.includes('pad thaï')) return '🍝';
+            if(nom.includes('riz') || nom.includes('khao') || nom.includes('bibimbap') || nom.includes('risotto') || nom.includes('cantonais') || nom.includes('sushi') || nom.includes('maki')) return '🍚';
+            if(nom.includes('poulet')) return '🍗';
+            if(nom.includes('bœuf') || nom.includes('steak') || nom.includes('viande') || nom.includes('porc') || nom.includes('lardons')) return '🥩';
+            if(nom.includes('saumon') || nom.includes('poisson') || nom.includes('cabillaud') || nom.includes('truite')) return '🐟';
+            if(nom.includes('crevette') || nom.includes('gambas')) return '🍤';
+            if(nom.includes('salade')) return '🥗';
+            if(nom.includes('soupe') || nom.includes('pho') || nom.includes('ramen')) return '🍜';
+            if(nom.includes('pizza')) return '🍕';
+            if(nom.includes('burger') || nom.includes('hamburger')) return '🍔';
+            if(nom.includes('chocolat') || nom.includes('gâteau') || nom.includes('crêpe') || nom.includes('tarte') || nom.includes('mousse')) return '🍰';
+            if(nom.includes('œuf') || nom.includes('omelette')) return '🍳';
+            if(nom.includes('curry')) return '🍛';
+            if(nom.includes('fromage') || nom.includes('fondue')) return '🧀';
+            return recette.categorie === 'Asie' ? '🥢' : '🍲';
+        }
+
+        function genererImageOffline(recette) {
+            const emoji = obtenirEmoji(recette);
+            const bgColor = recette.categorie === 'Asie' ? '#f5f3ff' : '#eff6ff'; // Fond légèrement violet ou bleu
+            const textColor = recette.categorie === 'Asie' ? '#7e22ce' : '#1d4ed8'; 
+            
+            // On dessine une image vectorielle SVG (qui pèse 0 octet et marche sans internet)
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+                <rect width="100%" height="100%" fill="${bgColor}"/>
+                <text x="50%" y="45%" font-size="100" text-anchor="middle" dominant-baseline="middle">${emoji}</text>
+                <text x="50%" y="75%" font-family="system-ui, sans-serif" font-size="28" font-weight="bold" fill="${textColor}" text-anchor="middle">${recette.nom}</text>
+                <text x="50%" y="85%" font-family="system-ui, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle">En attente de photo...</text>
+            </svg>`;
+            
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        // --- GÉNÉRATEUR DE NOMS D'IMAGES POUR GITHUB ---
+        function genererNomImage(nom) {
+            let nomFichier = nom.toLowerCase()
+                .replace(/œ/g, 'oe')
+                .replace(/[éèêë]/g, 'e')
+                .replace(/[àâä]/g, 'a')
+                .replace(/[îï]/g, 'i')
+                .replace(/[ôö]/g, 'o')
+                .replace(/[ùûü]/g, 'u')
+                .replace(/[ç]/g, 'c')
+                .replace(/[^a-z0-9]+/g, '-') // Remplace tout ce qui n'est pas lettre/chiffre par un tiret
+                .replace(/^-+|-+$/g, ''); // Enlève les tirets au début et à la fin
+            
+            return `images/${nomFichier}.jpg`;
+        }
+
+        // --- INITIALISATION ---
+        function init() {
+            // Création des groupes pour le menu déroulant ET enrichissement des données
+            const groupes = {};
+            
+            recettes.forEach((recette, index) => {
+                // Génération automatique des temps
+                if (!recette.temps) {
+                    const tempsEstime = [15, 20, 25, 30, 45][recette.nom.length % 5];
+                    recette.temps = tempsEstime + " min";
+                }
+                
+                // Application des descriptions personnalisées
+                if (!recette.description) {
+                    recette.description = genererDescriptionGourmande(recette);
+                }
+
+                // Attribution automatique du chemin de l'image locale
+                if (!recette.image) {
+                    recette.image = genererNomImage(recette.nom);
+                }
+
+                if (!groupes[recette.categorie]) {
+                    groupes[recette.categorie] = document.createElement('optgroup');
+                    groupes[recette.categorie].label = "🌍 " + recette.categorie;
+                    ui.choixRecette.appendChild(groupes[recette.categorie]);
+                }
+                const option = document.createElement('option');
+                option.value = index; 
+                option.textContent = recette.nom;
+                groupes[recette.categorie].appendChild(option);
+            });
+
+            chargerDonnees();
+            render();
+            setupListeners();
+        }
+
+        // --- LOGIQUE MÉTIER ---
+        
+        function parserEntreeManuelle(entree) {
+            entree = entree.trim();
+            const match = entree.match(/^([\d.,]+)\s*(g|kg|ml|cl|l|c\.à\.s|c\.à\.c)?\s+(.+)$/i);
+            if (match) {
+                return {
+                    quantite: parseFloat(match[1].replace(',', '.')),
+                    unite: match[2] ? match[2].toLowerCase() : "",
+                    nom: match[3].trim()
+                };
+            }
+            return { nom: entree, quantite: 1, unite: "" };
+        }
+
+        function ajouterArticle(nom, quantite = 1, unite = "") {
+            const index = appState.articles.findIndex(a => a.nom.toLowerCase() === nom.toLowerCase());
+            if (index !== -1) {
+                appState.articles[index].quantite += quantite;
+                if (!appState.articles[index].unite) appState.articles[index].unite = unite;
+            } else {
+                appState.articles.push({ nom, quantite, unite, coche: false });
+            }
+        }
+
+        function retirerArticle(nom, quantite = 1) {
+            const index = appState.articles.findIndex(a => a.nom.toLowerCase() === nom.toLowerCase());
+            if (index !== -1) {
+                appState.articles[index].quantite -= quantite;
+                if (appState.articles[index].quantite <= 0.01) { 
+                    appState.articles.splice(index, 1);
+                }
+            }
+        }
+
+        function basculerCoche(nom) {
+            const article = appState.articles.find(a => a.nom === nom);
+            if (article) article.coche = !article.coche;
+            sauvegarderDonnees();
+            render();
+        }
+
+        // Fonction d'ajout centralisée
+        function executerAjoutRecette(index, nbPers) {
+            if (index === "" || index === undefined) return;
+            
+            const recette = recettes[index];
+            const menuExistant = appState.menus.find(m => m.nom === recette.nom);
+            if (menuExistant) {
+                menuExistant.personnes += nbPers;
+            } else {
+                appState.menus.push({ nom: recette.nom, personnes: nbPers });
+            }
+
+            recette.ingredients.forEach(ing => ajouterArticle(ing.nom, ing.qte * nbPers, ing.unite));
+            sauvegarderDonnees();
+        }
+
+        function ajouterRecette() {
+            const index = ui.choixRecette.value;
+            const nbPers = parseInt(ui.nbPersonnes.value) || 2;
+            executerAjoutRecette(index, nbPers);
+            ui.choixRecette.value = "";
+            render();
+        }
+
+        // Fonction globale pour les cartes d'idées
+        window.ajouterDepuisIdees = function(index) {
+            const inputPers = document.getElementById('nbPersIdee_' + index);
+            const nbPers = parseInt(inputPers.value) || 2;
+            executerAjoutRecette(index, nbPers);
+            
+            // Effet UX : On bascule sur l'onglet Liste pour voir l'ajout
+            changerOnglet('courses'); 
+        };
+
+        // Fonctions de la modale de détails 100% HORS-LIGNE avec support d'images réelles
+        window.ouvrirDetailsRecette = function(index) {
+            const recette = recettes[index];
+            
+            // Préparation des listes HTML
+            const ingredientsHtml = recette.ingredients.map(ing => `<li><span class="font-semibold text-gray-800">${formaterAffichageQuantite(ing.qte, ing.unite)}</span> ${ing.nom}</li>`).join('');
+            const etapesHtml = recette.etapes.map(etape => `<li class="pl-2 leading-relaxed">${etape}</li>`).join('');
+
+            // L'application va essayer de charger l'image depuis ton dossier "images/". 
+            // Si elle n'y est pas (onerror), elle bascule automatiquement sur l'image générée hors-ligne.
+            ui.contenuDetailsRecette.innerHTML = `
+                <div class="w-full h-48 sm:h-64 mb-6 rounded-xl overflow-hidden bg-blue-50 relative flex items-center justify-center border border-blue-100 shadow-inner">
+                    <img src="${recette.image}" alt="Illustration de ${recette.nom}" onerror="this.onerror=null; this.src=genererImageOffline(recettes[${index}]);" class="w-full h-full object-cover">
+                </div>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xs font-bold bg-gray-100 text-gray-600 px-3 py-1 rounded-full">🌍 ${recette.categorie}</span>
+                    <span class="text-xs font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-full">⏱ ${recette.temps}</span>
+                </div>
+                <h3 class="text-2xl font-bold text-blue-800 mb-2">${recette.nom}</h3>
+                <p class="text-gray-600 italic mb-6 text-sm">${recette.description}</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+                    <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-50">
+                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2"><span>🛒</span> Ingrédients (1 pers.)</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-2">
+                            ${ingredientsHtml}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><span>👨‍🍳</span> Préparation</h4>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-3 marker:text-blue-500 marker:font-bold">
+                            ${etapesHtml}
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100 mt-6 bg-gray-50 -mx-6 -mb-6 p-4 rounded-b-xl">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-600 text-sm font-semibold">Pour :</span>
+                        <input type="number" id="nbPersModal_${index}" value="2" min="1" max="20" class="w-16 border border-gray-300 rounded-lg px-2 py-1.5 text-center font-bold focus:outline-none focus:border-blue-500">
+                        <span class="text-gray-600 text-sm font-semibold">personnes</span>
+                    </div>
+                    <button onclick="ajouterDepuisModal(${index})" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                        + Ajouter au menu
+                    </button>
+                </div>
+            `;
+            ui.modalDetailsRecette.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Empêche le défilement de l'arrière-plan
+        };
+
+        window.fermerDetailsRecette = function() {
+            ui.modalDetailsRecette.classList.add('hidden');
+            // On s'assure de ne pas réactiver le défilement si la modale de tirage au sort est en dessous
+            if (ui.modalTirageSort && ui.modalTirageSort.classList.contains('hidden')) {
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.ajouterDepuisModal = function(index) {
+            const inputPers = document.getElementById('nbPersModal_' + index);
+            const nbPers = parseInt(inputPers.value) || 2;
+            executerAjoutRecette(index, nbPers);
+            fermerDetailsRecette();
+            
+            // Si le tirage au sort était ouvert, on le ferme aussi proprement
+            if (!ui.modalTirageSort.classList.contains('hidden')) {
+                fermerTirageSort();
+            }
+            
+            // On bascule toujours vers la liste de courses
+            changerOnglet('courses');
+        };
+
+        // Fonctions pour le tirage au sort
+        window.ouvrirTirageSort = function() {
+            let indices = [];
+            while(indices.length < 3) {
+                let rand = Math.floor(Math.random() * recettes.length);
+                if(!indices.includes(rand)) indices.push(rand);
+            }
+
+            ui.contenuTirageSort.innerHTML = '';
+            indices.forEach(index => {
+                const recette = recettes[index];
+                const carte = document.createElement('div');
+                carte.className = 'bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow';
+                carte.innerHTML = `
+                    <div class="cursor-pointer mb-3 group" onclick="ouvrirDetailsRecette(${index})">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-md text-blue-800 leading-tight pr-2 group-hover:text-blue-600 transition-colors">${recette.nom}</h3>
+                            <span class="text-xs font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-full whitespace-nowrap">⏱ ${recette.temps}</span>
+                        </div>
+                        <span class="text-xs font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mb-2 inline-block">🌍 ${recette.categorie}</span>
+                        <p class="text-xs text-gray-500 line-clamp-3 mt-1">${recette.description}</p>
+                    </div>
+                    <div class="flex flex-col gap-2 mt-auto pt-3 border-t border-gray-50">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-semibold text-gray-500">Portions :</span>
+                            <input type="number" id="nbPersTirage_${index}" value="2" min="1" max="20" class="w-14 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-sm text-center focus:outline-none focus:border-purple-500">
+                        </div>
+                        <button onclick="choisirRecetteTirage(${index})" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold py-2 px-3 rounded-lg text-sm transition-colors border border-purple-200">
+                            + Choisir
+                        </button>
+                    </div>
+                `;
+                ui.contenuTirageSort.appendChild(carte);
+            });
+
+            ui.modalTirageSort.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.fermerTirageSort = function() {
+            ui.modalTirageSort.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        window.choisirRecetteTirage = function(index) {
+            const inputPers = document.getElementById('nbPersTirage_' + index);
+            const nbPers = parseInt(inputPers.value) || 2;
+            executerAjoutRecette(index, nbPers);
+            fermerTirageSort();
+            changerOnglet('courses');
+        };
+
+        function retirerRecette(nomRecette) {
+            const indexMenu = appState.menus.findIndex(m => m.nom === nomRecette);
+            if (indexMenu !== -1) {
+                const nbPers = appState.menus[indexMenu].personnes;
+                appState.menus.splice(indexMenu, 1);
+                
+                const recette = recettes.find(r => r.nom === nomRecette);
+                if (recette) {
+                    recette.ingredients.forEach(ing => retirerArticle(ing.nom, ing.qte * nbPers));
+                }
+                sauvegarderDonnees();
+                render();
+            }
+        }
+
+        // Fonctions de gestion de la modale
+        function demanderViderListe() {
+            ui.modalConfirmation.classList.remove('hidden');
+        }
+
+        function annulerViderListe() {
+            ui.modalConfirmation.classList.add('hidden');
+        }
+
+        function viderListe() {
+            appState.articles = [];
+            appState.menus = [];
+            sauvegarderDonnees();
+            render();
+            annulerViderListe(); // On ferme la modale après avoir vidé
+        }
+
+        function changerOnglet(onglet) {
+            appState.ongletActif = onglet;
+            render();
+        }
+
+        // --- SAUVEGARDE (LocalStorage) ---
+        function sauvegarderDonnees() {
+            localStorage.setItem('coursesData', JSON.stringify(appState));
+        }
+
+        function chargerDonnees() {
+            const data = localStorage.getItem('coursesData');
+            if (data) {
+                appState = JSON.parse(data);
+                appState.articles.forEach(art => { if (art.unite === undefined) art.unite = ""; });
+            }
+        }
+
+        function formaterAffichageQuantite(qte, unite) {
+            qte = Math.round(qte * 100) / 100;
+            
+            if (unite === 'g' && qte >= 1000) return (qte / 1000) + ' kg';
+            if (unite === 'ml' && qte >= 1000) return (qte / 1000) + ' L';
+            if (unite === 'cl' && qte >= 100) return (qte / 100) + ' L';
+            
+            if (!unite) return qte > 1 ? qte + 'x ' : '';
+            return qte + (unite.length <= 2 ? unite : ' ' + unite);
+        }
+
+        // --- AFFICHAGE (Rendu dynamique) ---
+        function render() {
+            // 0. Gestion visuelle des onglets (Dynamique)
+            const onglets = [
+                { id: 'courses', btn: ui.ongletCourses, vue: ui.vueCourses },
+                { id: 'recettes', btn: ui.ongletRecettes, vue: ui.vueRecettes },
+                { id: 'idees', btn: ui.ongletIdees, vue: ui.vueIdees }
+            ];
+
+            onglets.forEach(o => {
+                if (appState.ongletActif === o.id) {
+                    o.btn.className = "py-2 px-4 text-blue-600 border-b-2 border-blue-600 font-bold focus:outline-none flex-1 transition-colors whitespace-nowrap";
+                    o.vue.classList.remove('hidden');
+                } else {
+                    o.btn.className = "py-2 px-4 text-gray-400 hover:text-blue-500 border-b-2 border-transparent font-bold focus:outline-none flex-1 transition-colors whitespace-nowrap";
+                    o.vue.classList.add('hidden');
+                }
+            });
+
+            // 1. Rendu des menus choisis
+            ui.listeRecettesChoisies.innerHTML = '';
+            if (appState.menus.length > 0) {
+                ui.zoneRecettesChoisies.classList.remove('hidden');
+                appState.menus.forEach(menu => {
+                    const badge = document.createElement('span');
+                    badge.className = 'bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full shadow-sm cursor-pointer hover:bg-red-100 hover:text-red-800 hover:line-through transition-all';
+                    badge.title = "Cliquer pour retirer";
+                    badge.textContent = `${menu.nom} (${menu.personnes}p.)`;
+                    badge.onclick = () => retirerRecette(menu.nom);
+                    ui.listeRecettesChoisies.appendChild(badge);
+                });
+            } else {
+                ui.zoneRecettesChoisies.classList.add('hidden');
+            }
+
+            // 2. Rendu des articles
+            ui.listeCourses.innerHTML = '';
+            const articlesTries = [...appState.articles].sort((a, b) => a.coche === b.coche ? 0 : a.coche ? 1 : -1);
+            
+            articlesTries.forEach(article => {
+                const li = document.createElement('li');
+                li.className = `flex justify-between items-center p-3 border border-gray-100 rounded-lg shadow-sm transition-all ${article.coche ? 'bg-gray-100 opacity-60' : 'bg-gray-50'}`;
+                
+                const texteQuantite = formaterAffichageQuantite(article.quantite, article.unite);
+
+                li.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" class="w-5 h-5 cursor-pointer accent-blue-500" ${article.coche ? 'checked' : ''}>
+                        <span class="text-lg ${article.coche ? 'line-through text-gray-500' : 'text-gray-800'}">
+                            ${texteQuantite ? `<span class="font-bold text-blue-600 mr-1">${texteQuantite}</span>` : ''}
+                            ${article.nom}
+                        </span>
+                    </div>
+                    <button class="text-red-400 hover:text-red-600 font-bold px-2 py-1 transition-colors" title="Supprimer cet article">✕</button>
+                `;
+
+                li.querySelector('input').onchange = () => basculerCoche(article.nom);
+                li.querySelector('button').onclick = () => {
+                    retirerArticle(article.nom, article.quantite);
+                    sauvegarderDonnees();
+                    render();
+                };
+
+                ui.listeCourses.appendChild(li);
+            });
+
+            // 3. Gestion du bouton vider
+            if (appState.articles.length > 0 || appState.menus.length > 0) {
+                ui.boutonVider.classList.remove('hidden');
+            } else {
+                ui.boutonVider.classList.add('hidden');
+            }
+
+            // 4. Rendu de la vue Préparation
+            ui.vueRecettes.innerHTML = '';
+            if (appState.menus.length === 0) {
+                ui.vueRecettes.innerHTML = '<div class="text-center text-gray-500 italic py-10 bg-gray-50 rounded-lg border border-gray-100">Aucune recette au menu pour le moment.</div>';
+            } else {
+                appState.menus.forEach(menu => {
+                    const recette = recettes.find(r => r.nom === menu.nom);
+                    if (recette) {
+                        const blocRecette = document.createElement('div');
+                        blocRecette.className = 'bg-white border border-blue-100 rounded-xl p-5 shadow-sm';
+                        
+                        let htmlEtapes = '<ol class="list-decimal list-inside space-y-2 mt-4 text-gray-700 marker:text-blue-500 marker:font-bold">';
+                        if (recette.etapes) {
+                            recette.etapes.forEach(etape => {
+                                htmlEtapes += `<li class="pl-2 leading-relaxed">${etape}</li>`;
+                            });
+                        }
+                        htmlEtapes += '</ol>';
+
+                        blocRecette.innerHTML = `
+                            <div class="flex justify-between items-center border-b-2 border-blue-50 pb-2">
+                                <h3 class="font-bold text-lg text-blue-800">${recette.nom}</h3>
+                                <span class="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Pour ${menu.personnes} pers.</span>
+                            </div>
+                            ${htmlEtapes}
+                        `;
+                        ui.vueRecettes.appendChild(blocRecette);
+                    }
+                });
+            }
+
+            // 5. Rendu de la vue Idées (Grille de recettes)
+            ui.grilleIdees.innerHTML = '';
+            const termeRecherche = (ui.rechercheIdee.value || "").toLowerCase();
+            
+            recettes.forEach((recette, index) => {
+                // Filtre de recherche intelligent
+                if (termeRecherche && !recette.nom.toLowerCase().includes(termeRecherche) && !recette.categorie.toLowerCase().includes(termeRecherche) && !recette.ingredients.some(i => i.nom.toLowerCase().includes(termeRecherche))) {
+                    return; // On ignore cette recette si elle ne correspond pas
+                }
+
+                const carte = document.createElement('div');
+                carte.className = 'bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group';
+                carte.innerHTML = `
+                    <div class="cursor-pointer" onclick="ouvrirDetailsRecette(${index})">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-md text-blue-800 leading-tight pr-2 group-hover:text-blue-600 transition-colors">${recette.nom}</h3>
+                            <span class="text-xs font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-full whitespace-nowrap">⏱ ${recette.temps}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4 line-clamp-3">${recette.description}</p>
+                    </div>
+                    <div class="flex items-center gap-2 mt-auto pt-3 border-t border-gray-50">
+                        <input type="number" id="nbPersIdee_${index}" value="2" min="1" max="20" class="w-14 bg-gray-50 border border-gray-200 rounded px-1 py-1 text-sm text-center focus:outline-none focus:border-blue-500" title="Personnes">
+                        <button onclick="ajouterDepuisIdees(${index})" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold py-1.5 px-3 rounded flex-1 text-sm transition-colors border border-blue-100">
+                            + Ajouter
+                        </button>
+                    </div>
+                `;
+                ui.grilleIdees.appendChild(carte);
+            });
+        }
+
+        // --- ÉCOUTEURS D'ÉVÉNEMENTS ---
+        function setupListeners() {
+            ui.boutonAjouter.onclick = () => {
+                const saisie = ui.champSaisie.value;
+                if (!saisie.trim()) return;
+                
+                const articleParse = parserEntreeManuelle(saisie);
+                ajouterArticle(articleParse.nom, articleParse.quantite, articleParse.unite);
+                
+                ui.champSaisie.value = '';
+                ui.champSaisie.focus();
+                sauvegarderDonnees();
+                render();
+            };
+
+            ui.champSaisie.onkeypress = (e) => {
+                if (e.key === 'Enter') ui.boutonAjouter.click();
+            };
+
+            ui.boutonAjouterRecette.onclick = ajouterRecette;
+            
+            // Écouteurs pour la nouvelle logique du bouton Vider
+            ui.boutonVider.onclick = demanderViderListe;
+            ui.boutonAnnulerVider.onclick = annulerViderListe;
+            ui.boutonConfirmerVider.onclick = viderListe;
+            
+            ui.ongletCourses.onclick = () => changerOnglet('courses');
+            ui.ongletRecettes.onclick = () => changerOnglet('recettes');
+            ui.ongletIdees.onclick = () => changerOnglet('idees');
+            
+            ui.rechercheIdee.addEventListener('input', render);
+            
+            // Écouteur pour le bouton tirage au sort
+            if(ui.boutonTirageSort) {
+                ui.boutonTirageSort.onclick = ouvrirTirageSort;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
